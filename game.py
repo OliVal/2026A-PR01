@@ -98,13 +98,29 @@ def scroll_camera():
     Fait défiler le monde lorsque le Doodle dépasse CAMERA_SCROLL_THRESHOLD.
     Met à jour le score et maintient les plateformes visibles.
     """
-    # TODO : Lorsque le Doodle dépasse le seuil de caméra, il doit rester
-    # visuellement au seuil pendant que les plateformes sont déplacées vers
-    # le bas de la même distance.
-    #
-    # Le score doit représenter la distance verticale ainsi parcourue et le
-    # meilleur score doit être mis à jour. Les plateformes sorties sous
-    # l'écran doivent être retirées, puis de nouvelles plateformes générées.
+    # 1. Vérifier si le Doodle dépasse le seuil vers le haut
+    if doodle_dict["y"] < CAMERA_SCROLL_THRESHOLD:
+        # Distance parcourue au-dessus du seuil
+        scroll_distance = CAMERA_SCROLL_THRESHOLD - doodle_dict["y"]
+
+        # Repositionner visuellement le Doodle exactement au seuil
+        doodle_dict["y"] = CAMERA_SCROLL_THRESHOLD
+
+        # Mettre à jour le score et le meilleur score
+        doodle_dict["score"] += scroll_distance
+        if doodle_dict["score"] > doodle_dict["high_score"]:
+            doodle_dict["high_score"] = doodle_dict["score"]
+
+        # Faire descendre toutes les plateformes de la même distance - addition parce que le positif est vers le bas
+        for p in PLATFORMS:
+            p["y"] += scroll_distance
+
+        # Filtrer en place pour retirer les plateformes sorties sous l'écran
+        # Modifie le contenu de la liste en place au lieu d'en recréer une nouvelle
+        PLATFORMS[:] = [p for p in PLATFORMS if p["y"] <= SCREEN_HEIGHT]    
+
+        # Générer de nouvelles plateformes en haut pour continuer la progression
+        generate_new_platforms()
 
     return
 
@@ -117,12 +133,29 @@ def generate_new_platforms():
     Génère de nouvelles plateformes au-dessus du haut de l'écran pour maintenir
     un flux continu lorsque la caméra défile.
     """
-    # TODO : Complétez cette fonction en vous inspirant de la logique de
-    # génération initiale, sans la recopier inutilement.
-    #
-    # Vous devrez partir de la plateforme actuellement la plus haute et
-    # continuer à ajouter des plateformes tant que nécessaire. Utilisez
-    # choose_platform_type(...) avec les probabilités indiquées dans le README.
+   # 1. Identifier la plateforme la plus haute ou gérer le cas où PLATFORMS est vide
+    if not PLATFORMS:
+        highest_y = SCREEN_HEIGHT
+    else:
+        highest_y = min(p["y"] for p in PLATFORMS)
+
+    # 2. Définir le point de départ vertical de la prochaine plateforme
+    current_y = highest_y - random.randint(MIN_PLATFORM_GAP, MAX_PLATFORM_GAP)
+
+    # 3. Ajouter de nouvelles plateformes tant qu'on n'a pas dépassé le haut de l'écran
+    while current_y > 0:
+        # Coordonnée horizontale aléatoire valide
+        x = random.randint(0, SCREEN_WIDTH - PLATFORM_WIDTH)
+
+        # Sélection du type avec les probabilités en cours de jeu (55% / 20% / 13% / 12%)
+        platform_type = choose_platform_type(0.55, 0.20, 0.13)
+
+        # Création et ajout de la nouvelle plateforme
+        new_platform = create_platform(x, current_y, platform_type)
+        PLATFORMS.append(new_platform)
+
+        # Calcul de la hauteur de la suivante
+        current_y -= random.randint(MIN_PLATFORM_GAP, MAX_PLATFORM_GAP)
 
     return
 
