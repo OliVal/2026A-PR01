@@ -117,6 +117,56 @@ def check_platform_collisions():
     Le rebond ne se produit QUE lorsque le Doodle descend (vel_y > 0)
     et qu'il arrive sur le dessus d'une plateforme.
     """
+
+    if doodle_dict["vel_y"] <= 0:
+        return 
+
+    for p in PLATFORMS:
+        if not p["active"]:
+            continue
+
+        doodle_rect = (
+            doodle_dict["x"],
+            doodle_dict["y"],
+            DOODLE_WIDTH,
+            DOODLE_HEIGHT
+        )
+
+        platform_rect = (
+            p["x"],
+            p["y"],
+            p["width"],
+            p["height"]
+        )
+
+        if rects_collide(doodle_rect, platform_rect):
+            current_bottom = doodle_dict["y"] + DOODLE_HEIGHT
+            previous_bottom = current_bottom - doodle_dict["vel_y"]
+            platform_top = p["y"]
+
+            if previous_bottom <= platform_top + 14 and current_bottom >= platform_top:
+
+                if p["type"] == "spring":
+                    doodle_dict["vel_y"] = SPRING_JUMP_VELOCITY
+
+                elif p["type"] == "brown":
+                    doodle_dict["vel_y"] = JUMP_VELOCITY
+                    p["active"] = False
+
+                else:
+                    doodle_dict["vel_y"] = JUMP_VELOCITY
+
+                return
+                    
+
+
+      
+
+
+    
+      
+
+
     # TODO : Implémentez la détection d'un atterrissage.
     #
     # Contraintes :
